@@ -92,6 +92,36 @@ void ConcatOp::getCanonicalizationPatterns(RewritePatternSet &results,
 }
 
 //===----------------------------------------------------------------------===//
+// RepeatOp
+//===----------------------------------------------------------------------===//
+
+OpFoldResult RepeatOp::fold(FoldAdaptor adaptor) {
+  // repeat(s, 1, 0) -> s
+  if (adaptor.getAtleast() == 1 && adaptor.getAdditional() == 0)
+    return getInput();
+
+  return {};
+}
+
+//===----------------------------------------------------------------------===//
+// NextOp
+//===----------------------------------------------------------------------===//
+
+OpFoldResult NextOp::fold(FoldAdaptor adaptor) {
+  // next(p, 0) -> p
+  if (adaptor.getTime() == 0)
+    return getInput();
+
+  return {};
+}
+
+void NextOp::getCanonicalizationPatterns(RewritePatternSet &results,
+                                          MLIRContext *context) {
+  results.add<patterns::NestedNexts>(results.getContext());
+}
+
+
+//===----------------------------------------------------------------------===//
 // DisableOp
 //===----------------------------------------------------------------------===//
 

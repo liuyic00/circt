@@ -62,6 +62,13 @@ ltl.concat %s : !ltl.sequence
 ltl.concat %s, %s : !ltl.sequence, !ltl.sequence
 ltl.concat %s, %s, %s : !ltl.sequence, !ltl.sequence, !ltl.sequence
 
+// CHECK: ltl.repeat {{%.+}}, 0 : !ltl.sequence
+// CHECK: ltl.repeat {{%.+}}, 42 : !ltl.sequence
+// CHECK: ltl.repeat {{%.+}}, 42, 1337 : !ltl.sequence
+ltl.repeat %s, 0 : !ltl.sequence
+ltl.repeat %s, 42 : !ltl.sequence
+ltl.repeat %s, 42, 1337 : !ltl.sequence
+
 //===----------------------------------------------------------------------===//
 // Properties
 //===----------------------------------------------------------------------===//
@@ -82,6 +89,14 @@ ltl.implication %s, %p : !ltl.sequence, !ltl.property
 ltl.eventually %true : i1
 ltl.eventually %s : !ltl.sequence
 ltl.eventually %p : !ltl.property
+
+// CHECK: ltl.until {{%.+}}, {{%.+}} : !ltl.property, !ltl.property
+ltl.until %p, %p : !ltl.property, !ltl.property
+
+// CHECK: ltl.next {{%.+}}, 0 : !ltl.property
+// CHECK: ltl.next {{%.+}}, 10 : !ltl.property
+ltl.next %p, 0 : !ltl.property
+ltl.next %p, 10 : !ltl.property
 
 //===----------------------------------------------------------------------===//
 // Clocking

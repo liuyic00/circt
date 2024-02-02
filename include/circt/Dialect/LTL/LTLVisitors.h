@@ -52,9 +52,12 @@ public:
   HANDLE(OrOp, Unhandled);
   HANDLE(DelayOp, Unhandled);
   HANDLE(ConcatOp, Unhandled);
+  HANDLE(RepeatOp, Unhandled);
   HANDLE(NotOp, Unhandled);
   HANDLE(ImplicationOp, Unhandled);
   HANDLE(EventuallyOp, Unhandled);
+  HANDLE(NextOp, Unhandled);
+  HANDLE(UntilOp, Unhandled);
   HANDLE(ClockOp, Unhandled);
   HANDLE(DisableOp, Unhandled);
 #undef HANDLE

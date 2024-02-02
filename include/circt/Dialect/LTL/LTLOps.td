@@ -151,6 +151,32 @@ def ConcatOp : LTLOp<"concat", [Pure]> {
   }];
 }
 
+def RepeatOp : LTLOp<"repeat", [Pure]> {
+  let arguments = (ins
+    LTLAnySequenceType:$input,
+    I64Attr:$atleast,
+    OptionalAttr<I64Attr>:$additional);
+  let results = (outs LTLSequenceType:$result);
+  let assemblyFormat = [{
+    $input `,` $atleast (`,` $additional^)? attr-dict `:` type($input)
+  }];
+  let hasFolder = 1;
+
+  let summary = "Repeat a sequence by a number.";
+  let description = [{
+    Repeat the `$input` sequence at least `$atleast` times, at most `$atleast` +
+    `$additional` times. The number must be greater than or equal to zero.
+    Omitting `$additional` indicates an unbounded but finite repeat. For
+    example:
+
+    - `ltl.repeat %seq, 2, 0` repeats `%seq` exactly 2 times.
+    - `ltl.repeat %seq, 2, 2` repeats `%seq` 2, 3, or 4 times.
+    - `ltl.repeat %seq, 2` repeats `%seq` 2 or more times. The number of times
+      is unbounded but finite.
+    - `ltl.repeat %seq, 0, 0` represents an empty sequence.
+  }];
+}
+
 //===----------------------------------------------------------------------===//
 // Properties
 //===----------------------------------------------------------------------===//
@@ -204,6 +230,42 @@ def EventuallyOp : LTLOp<"eventually", [Pure]> {
     is strong: it requires that the `$input` holds after a *finite* number of
     cycles. The operator does *not* hold if the `$input` can't hold in the
     future.
+  }];
+}
+
+def NextOp : LTLOp<"next", [Pure]> {
+  let arguments = (ins LTLAnyPropertyType:$input,
+                       I64Attr:$time);
+  let results = (outs LTLPropertyType:$result);
+  let assemblyFormat = [{
+    $input `,` $time attr-dict `:` type($input)
+  }];
+  let hasFolder = 1;
+  let hasCanonicalizer = 1;
+
+  let summary = "Property holds after a specific number of cycles.";
+  let description = [{
+    The `$input` property holds after `$time` cycles exactly. The delay must be
+    greater than or equal to zero. This operator is strong: the operator does
+    *not* hold if there is not enough cycles.
+  }];
+}
+
+def UntilOp: LTLOp<"until", [Pure]> {
+  let arguments = (ins LTLAnyPropertyType:$input,
+                       LTLAnyPropertyType:$condition);
+  let results = (outs LTLPropertyType:$result);
+  let assemblyFormat = [{
+    operands attr-dict `:` type(operands)
+  }];
+
+  let summary = "Property always holds until another property holds.";
+  let description = [{
+    Checks that the `$input` property always holds until `$condition` property
+    holds. This operator is strong: it requires that the `$condition` holds
+    after a *finite* number of cycles. The operator does *not* hold if the
+    `$condition` can't hold in the future. This operator is nonoverlapping:
+    `$input` does not have to hold when `$condition` holds.
   }];
 }
 

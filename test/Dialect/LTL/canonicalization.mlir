@@ -95,6 +95,33 @@ func.func @ConcatFolds(%arg0: !ltl.sequence, %arg1: !ltl.sequence, %arg2: !ltl.s
   return
 }
 
+// CHECK-LABEL: @RepeatFolds
+func.func @RepeatFolds(%arg0: !ltl.sequence) {
+  // repeat(s, 1, 0) -> s
+  // CHECK-NEXT: call @Seq(%arg0)
+  %0 = ltl.repeat %arg0, 1, 0: !ltl.sequence
+  call @Seq(%0) : (!ltl.sequence) -> ()
+
+  return
+}
+
+// CHECK-LABEL: @NextFolds
+func.func @NextFolds(%arg0: !ltl.property) {
+  // next(p, 0) -> p
+  // CHECK-NEXT: call @Prop(%arg0)
+  %0 = ltl.next %arg0, 0 : !ltl.property
+  call @Prop(%0) : (!ltl.property) -> ()
+
+  // next(next(p, 1), 2) -> next(p, 3)
+  // CHECK-NEXT: ltl.next %arg0, 3 :
+  // CHECK-NEXT: call
+  %1 = ltl.next %arg0, 1 : !ltl.property
+  %2 = ltl.next %1, 2 : !ltl.property
+  call @Prop(%2) : (!ltl.property) -> ()
+
+  return
+}
+
 // CHECK-LABEL: @ClockingFolds
 func.func @ClockingFolds(%arg0: !ltl.property) {
   // disable(p, false) -> p
