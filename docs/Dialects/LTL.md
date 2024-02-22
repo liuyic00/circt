@@ -30,8 +30,9 @@ The core building blocks for modeling temporal logic in the `ltl` dialect are *s
 
 - `always s` checks that the sequence `s` holds in every cycle. This is often referred to as the **G** (or "globally") operator in LTL.
 - `eventually s` checks that the sequence `s` will hold at some cycle now or in the future. This is often referred to as the **F** (or "finally") operator in LTL.
-- `p until q` checks that the property `p` holds in every cycle before `q` is hold. This is often referred to as the **U** (or "next") operator in LTL.
-- `delay p` checks that the property `p` will hold at next cycle. This is often referred to as the **X** (or "next") operator in LTL.
+- `p until q` checks that the property `p` holds in every cycle before `q` holds. This is often referred to as the **U** (or "until") operator in LTL.
+- `delay[1] p` checks that the property `p` will hold on the next cycle. This is often referred to as the **X** (or "next") operator in LTL.
+- `delay[1:4] p` checks that the property `p` will hold anywhere on the cycle 1, 2, 3, or 4. Equivalent to `(delay[1]) p or (delay[2]) p or (delay[3] p) or (delay[4] p)`.
 - `s implies t` checks that whenever the sequence `s` is observed, it is immediately followed by sequence `t`.
 
 Traditional definitions of the LTL formalism do not make a distinction between sequences and properties. Most of their operators fall into the property category, for example, quantifiers like *globally*, *finally*, *release*, and *until*. The set of sequence operators is usually very small, since it is not necessary for academic treatment, consisting only of the *next* operator. The `ltl` dialect provides a richer set of operations to model sequences.
@@ -137,7 +138,7 @@ An important benefit of only modeling the overlapping `|->` implication operator
 
 ### Repetition
 
-The consecutive repetition is an important operator in SVA sequences. For example, `s[*3]` repeats the sequence `s` three times, which is equivalent to `s ##1 s ##1 s`. This also works when the length of sequence s is unspecified, like `##[0:3] a`. In an intuitive sense, this consecutive repetitio imports the ability to repeat `ltl.delay` an unbounded number of times, but LTL does not have this capability.
+Consecutive repetition is an important operator in SVA sequences. For example, `s[*3]` repeats the sequence `s` three times, which is equivalent to `s ##1 s ##1 s`. This also applies when the sequence `s` could match traces with different lengths. For example `(##[0:3] a)[*2]` is equivalent to the disjunction of all the combinations such as `a ##1 a`, `a ##1 (##3 a)`, `(##3 a) ##1 (##2 a)`.
 
 The definition of `ltl.repeat` is similar to that of `ltl.delay`. The mapping from SVA consecutive repetition to the LTL dialect is as follows:
 
@@ -157,6 +158,7 @@ The definition of `ltl.repeat` is similar to that of `ltl.delay`. The mapping fr
   ```
   ltl.repeat %seqA, m, n-m
   ```
+
 
 ### Clocking
 
@@ -200,9 +202,11 @@ The `ltl.delay` operation can be applied to both sequences and properties, repre
 | `ltl.delay %a, 0`    | **F**a                      |
 | `ltl.delay %a, 2`    | **XXF**a                    |
 
+
 ### Until, Always and Eventually
 
-`ltl.until` and `ltl.always` are *weak*, meaning the property will hold even if there isn't enough clock to evaluate the property. `ltl.eventually` is *strong*, where `ltl.eventually %p` means `p` must hold at some point in the trace.
+`ltl.until` and `ltl.always` are *weak*, meaning the property will hold even if the trace does not contain enough clock cycles to evaluate the property. `ltl.eventually` is *strong*, where `ltl.eventually %p` means `p` must hold at some point in the trace.
+
 
 ### Concatenation
 
