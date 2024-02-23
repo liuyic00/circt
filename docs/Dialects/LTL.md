@@ -9,7 +9,7 @@ This dialect provides operations and types to model [Linear Temporal Logic](http
 
 The main goal of the `ltl` dialect is to capture the core formalism underpinning SystemVerilog Assertions (SVAs), the de facto standard for describing temporal logic sequences and properties in hardware verification. (See IEEE 1800-2017 section 16 "Assertions".) We expressly try *not* to model this dialect like an AST for SVAs, but instead try to strip away all the syntactic sugar and Verilog quirks, and distill out the core foundation as an IR. Within the CIRCT project, this dialect intends to enable emission of rich temporal assertions as part of the Verilog output, but also provide a foundation for formal tools built ontop of CIRCT.
 
-As a primary reference, the `ltl` dialect attempts to model SVAs after the [Linear Temporal Logic](https://en.wikipedia.org/wiki/Linear_temporal_logic) formalism as a way to distill SystemVerilog's syntactic sugar and quirks down to a core representation. However, most definitions of LTL tend to be rather academic in nature and may be lacking certain building blocks to make them useful in practice. (See section on [concatenation](#concatenation) below.) To inform some practical design decisions, the `ltl` dialect tries to think of temporal sequences as "regular expressions over time", borrowing from their wide applicability and usefulness.
+As a primary reference, the `ltl` dialect attempts to model SVAs after the [Linear Temporal Logic](https://en.wikipedia.org/wiki/Linear_temporal_logic) formalism as a way to distill SystemVerilog's syntactic sugar and quirks down to a core representation. However, most definitions of LTL tend to be rather academic in nature and may be lacking certain building blocks to make them useful in practice. (See section on [concatenation and repetition](#concatenation-and-repetition) below.) To inform some practical design decisions, the `ltl` dialect tries to think of temporal sequences as "regular expressions over time", borrowing from their wide applicability and usefulness.
 
 
 ### Sequences and Properties
@@ -208,13 +208,15 @@ The `ltl.delay` operation can be applied to both sequences and properties, repre
 `ltl.until` and `ltl.always` are *weak*, meaning the property will hold even if the trace does not contain enough clock cycles to evaluate the property. `ltl.eventually` is *strong*, where `ltl.eventually %p` means `p` must hold at some point in the trace.
 
 
-### Concatenation
+### Concatenation and Repetition
 
 The `ltl.concat` sequence operation does not have a direct equivalent in LTL. It builds a longer sequence by composing multiple shorter sequences one after another. LTL has no concept of concatenation, or a *"v happens after u"*, where the point in time at which v starts is dependent on how long the sequence u was.
 
 For a sequence u with a fixed length of 2, concatenation can be represented as *"(u happens) and (v happens 2 cycles in the future)"*, u ∧ **XX**v. If u has a dynamic length though, for example a delay between 1 and 2, `ltl.delay %u, 1, 1` or **X**u ∨ **XX**u in LTL, there is no fixed number of cycles by which the sequence v can be delayed to make it start after u. Instead, all different-length variants of sequence u have to be enumerated and combined with a copy of sequence v delayed by the appropriate amount: (**X**u ∧ **XX**v) ∨ (**XX**u ∧ **XXX**v). This is basically saying "u delayed by 1 to 2 cycles followed by v" is the same as either *"u delayed by 1 cycle and v delayed by 2 cycles"*, or *"u delayed by 2 cycles and v delayed by 3 cycles"*.
 
 The *"v happens after u"* relationship is crucial to express sequences efficiently, which is why the LTL dialect has the `ltl.concat` op. If sequences are thought of as regular expressions over time, for example, `a(b|cd)` or *"a followed by either (b) or (c followed by d)"*, the importance of having a concatenation operation as temporal connective becomes apparent. Why LTL formalisms tend to not include such an operator is unclear.
+
+As for `ltl.repeat`, it also relies on the semantics of *v happens after u* to compose the repeated sequences. Unlike `ltl.concat`, which can be expanded by LTL operators within a finite formula size, unbounded repetition cannot be expanded by listing all cases. This means unbounded repetition imports semantics that LTL cannot describe. The LTL dialect has this operation because it is necessary and useful for regular expressions and SVA.
 
 
 ## Types
