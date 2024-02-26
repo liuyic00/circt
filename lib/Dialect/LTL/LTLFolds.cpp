@@ -62,7 +62,7 @@ namespace patterns {
 OpFoldResult DelayOp::fold(FoldAdaptor adaptor) {
   // delay(s, 0, 0) -> s
   if (adaptor.getDelay() == 0 && adaptor.getLength() == 0 &&
-      !isa<SequenceType>(getResult().getType()))
+      getInput().getType() == getResult().getType())
     return getInput();
 
   return {};
@@ -72,6 +72,27 @@ void DelayOp::getCanonicalizationPatterns(RewritePatternSet &results,
                                           MLIRContext *context) {
   results.add<patterns::NestedDelays>(results.getContext());
   results.add<patterns::MoveDelayIntoConcat>(results.getContext());
+}
+
+//===----------------------------------------------------------------------===//
+// CastToPropOp
+//===----------------------------------------------------------------------===//
+
+OpFoldResult CastToPropOp::fold(FoldAdaptor adaptor) {
+  // castp(p) -> p
+  if (isa<PropertyType>(getInput().getType()))
+    return getInput();
+
+  return {};
+}
+void CastToPropOp::getCanonicalizationPatterns(RewritePatternSet &results,
+                                               MLIRContext *context) {
+  results.add<patterns::CastpInNot>(results.getContext());
+  results.add<patterns::CastpInImplication>(results.getContext());
+  results.add<patterns::CastpInEventually>(results.getContext());
+  results.add<patterns::CastpInUntilInput>(results.getContext());
+  results.add<patterns::CastpInUntilCondition>(results.getContext());
+  results.add<patterns::CastpInDisable>(results.getContext());
 }
 
 //===----------------------------------------------------------------------===//
@@ -89,6 +110,18 @@ OpFoldResult ConcatOp::fold(FoldAdaptor adaptor) {
 void ConcatOp::getCanonicalizationPatterns(RewritePatternSet &results,
                                            MLIRContext *context) {
   results.add<patterns::FlattenConcats>(results.getContext());
+}
+
+//===----------------------------------------------------------------------===//
+// RepeatOp
+//===----------------------------------------------------------------------===//
+
+OpFoldResult RepeatOp::fold(FoldAdaptor adaptor) {
+  // repeat(s, 1, 0) -> s
+  if (adaptor.getBase() == 1 && adaptor.getMore() == 0)
+    return getInput();
+
+  return {};
 }
 
 //===----------------------------------------------------------------------===//

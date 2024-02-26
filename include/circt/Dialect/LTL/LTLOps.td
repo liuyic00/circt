@@ -49,48 +49,74 @@ def OrOp : AssocLTLOp<"or"> {
   }];
 }
 
-//===----------------------------------------------------------------------===//
-// Sequences
-//===----------------------------------------------------------------------===//
-
-def DelayOp : LTLOp<"delay", [Pure]> {
+def DelayOp : LTLOp<"delay", [
+  Pure, InferTypeOpInterface, DeclareOpInterfaceMethods<InferTypeOpInterface>
+]> {
   let arguments = (ins
-    LTLAnySequenceType:$input,
+    LTLAnyPropertyType:$input,
     I64Attr:$delay,
     OptionalAttr<I64Attr>:$length);
-  let results = (outs LTLSequenceType:$result);
+  let results = (outs LTLSequenceOrPropertyType:$result);
   let assemblyFormat = [{
     $input `,` $delay (`,` $length^)? attr-dict `:` type($input)
   }];
   let hasFolder = 1;
   let hasCanonicalizer = 1;
 
-  let summary = "Delay a sequence by a number of cycles.";
+  let summary = "Delay a sequence/property by a number of cycles.";
   let description = [{
-    Delays the `$input` sequence by the number of cycles specified by `$delay`.
-    The delay must be greater than or equal to zero. The optional `$length`
-    specifies during how many cycles after the initial delay the sequence can
-    match. Omitting `$length` indicates an unbounded but finite delay. For
-    example:
+    Delays the `$input` sequence/property by the number of cycles specified by
+    `$delay`. The delay must be greater than or equal to zero. The optional
+    `$length` specifies during how many cycles after the initial delay the
+    sequence can match or property can hold. Omitting `$length` indicates an
+    unbounded but finite delay. For example:
 
-    - `ltl.delay %seq, 2, 0` delays `%seq` by exactly 2 cycles. The resulting
-      sequence matches if `%seq` matches exactly 2 cycles in the future.
-    - `ltl.delay %seq, 2, 2` delays `%seq` by 2, 3, or 4 cycles. The resulting
-      sequence matches if `%seq` matches 2, 3, or 4 cycles in the future.
-    - `ltl.delay %seq, 2` delays `%seq` by 2 or more cycles. The number of
-      cycles is unbounded but finite, which means that `%seq` *has* to match at
-      some point, instead of effectively never occuring by being delayed an
-      infinite number of cycles.
-    - `ltl.delay %seq, 0, 0` is equivalent to just `%seq`.
+    - `ltl.delay %a, 2, 0` delays `%a` by exactly 2 cycles. The resulting
+      sequence matches/property holds if `%a` matches/holds exactly 2 cycles in
+      the future.
+    - `ltl.delay %a, 2, 2` delays `%a` by 2, 3, or 4 cycles. The resulting
+      sequence matches/property holds if `%a` matches/holds 2, 3, or 4 cycles in
+      the future.
+    - `ltl.delay %a, 2` delays `%a` by 2 or more cycles. The number of cycles is
+      unbounded but finite, which means that `%a` *has* to match/hold at some
+      point, instead of effectively never occuring by being delayed an infinite
+      number of cycles.
+    - `ltl.delay %a, 0, 0` is equivalent to just `%a`.
+
+    This operator is weak: the sequence/property will match/hold even if the
+    clock cycles are not enough to evaluate the sequence/property. The operation
+    returns a property if `$input` is a property, and a sequence otherwise.
 
     #### Clocking
 
     The cycle delay specified on the operation refers to a clocking event. This
     event is not directly specified by the delay operation itself. Instead, the
     [`ltl.clock`](#ltlclock-circtltlclockop) operation can be used to associate
-    all delays within a sequence with a clock.
+    all delays within a sequence/property with a clock.
   }];
 }
+
+def CastToPropOp : LTLOp<"castp", [Pure]> {
+  let arguments = (ins LTLAnyPropertyType:$input);
+  let results = (outs LTLPropertyType:$result);
+  let assemblyFormat = [{
+    $input attr-dict `:` type($input)
+  }];
+  let hasFolder = 1;
+  let hasCanonicalizer = 1;
+
+  let summary = "Cast to a property.";
+  let description = [{
+    Cast the `$input` to `!ltl.property`. This operater is recommended to be
+    used only inside generic operations, such as `ltl.and`, `ltl.or` and
+    `ltl.delay`, to explicitly specify that the operation is applied to
+    `!ltl.property`.
+  }];
+}
+
+//===----------------------------------------------------------------------===//
+// Sequences
+//===----------------------------------------------------------------------===//
 
 def ConcatOp : LTLOp<"concat", [Pure]> {
   let arguments = (ins Variadic<LTLAnySequenceType>:$inputs);
@@ -151,6 +177,31 @@ def ConcatOp : LTLOp<"concat", [Pure]> {
   }];
 }
 
+def RepeatOp : LTLOp<"repeat", [Pure]> {
+  let arguments = (ins
+    LTLAnySequenceType:$input,
+    I64Attr:$base,
+    OptionalAttr<I64Attr>:$more);
+  let results = (outs LTLSequenceType:$result);
+  let assemblyFormat = [{
+    $input `,` $base (`,` $more^)? attr-dict `:` type($input)
+  }];
+  let hasFolder = 1;
+
+  let summary = "Repeat a sequence by a number.";
+  let description = [{
+    Repeat the `$input` sequence at least `$base` times, at most `$base` +
+    `$more` times. The number must be greater than or equal to zero. Omitting
+    `$more` indicates an unbounded but finite repeat. For example:
+
+    - `ltl.repeat %seq, 2, 0` repeats `%seq` exactly 2 times.
+    - `ltl.repeat %seq, 2, 2` repeats `%seq` 2, 3, or 4 times.
+    - `ltl.repeat %seq, 2` repeats `%seq` 2 or more times. The number of times
+      is unbounded but finite.
+    - `ltl.repeat %seq, 0, 0` represents an empty sequence.
+  }];
+}
+
 //===----------------------------------------------------------------------===//
 // Properties
 //===----------------------------------------------------------------------===//
@@ -204,6 +255,23 @@ def EventuallyOp : LTLOp<"eventually", [Pure]> {
     is strong: it requires that the `$input` holds after a *finite* number of
     cycles. The operator does *not* hold if the `$input` can't hold in the
     future.
+  }];
+}
+
+def UntilOp: LTLOp<"until", [Pure]> {
+  let arguments = (ins LTLAnyPropertyType:$input,
+                       LTLAnyPropertyType:$condition);
+  let results = (outs LTLPropertyType:$result);
+  let assemblyFormat = [{
+    operands attr-dict `:` type(operands)
+  }];
+
+  let summary = "Property always holds until another property holds.";
+  let description = [{
+    Checks that the `$input` property always holds until the `$condition`
+    property holds once. This operator is weak: the property will hold even if
+    `$input` always holds and `$condition` never holds. This operator is
+    nonoverlapping: `$input` does not have to hold when `$condition` holds.
   }];
 }
 

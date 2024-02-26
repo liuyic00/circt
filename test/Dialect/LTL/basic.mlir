@@ -46,14 +46,37 @@ unrealized_conversion_cast %p1 : !ltl.property to index
 unrealized_conversion_cast %p2 : !ltl.property to index
 unrealized_conversion_cast %p3 : !ltl.property to index
 
-//===----------------------------------------------------------------------===//
-// Sequences
-//===----------------------------------------------------------------------===//
-
 // CHECK: ltl.delay {{%.+}}, 0 : !ltl.sequence
 // CHECK: ltl.delay {{%.+}}, 42, 1337 : !ltl.sequence
 ltl.delay %s, 0 : !ltl.sequence
 ltl.delay %s, 42, 1337 : !ltl.sequence
+
+// CHECK: ltl.delay {{%.+}}, 0 : !ltl.property
+// CHECK: ltl.delay {{%.+}}, 42, 1337 : !ltl.property
+ltl.delay %p, 0 : !ltl.property
+ltl.delay %p, 42, 1337 : !ltl.property
+
+// Type inference.
+%d0 = ltl.delay %true, 0 : i1
+%d1 = ltl.delay %s, 0 : !ltl.sequence
+%d2 = ltl.delay %p, 0 : !ltl.property
+unrealized_conversion_cast %d0 : !ltl.sequence to index
+unrealized_conversion_cast %d1 : !ltl.sequence to index
+unrealized_conversion_cast %d2 : !ltl.property to index
+
+// CHECK: ltl.castp {{%.+}} : i1
+// CHECK: ltl.castp {{%.+}} : !ltl.sequence
+// CHECK: ltl.castp {{%.+}} : !ltl.property
+%c0 = ltl.castp %true : i1
+%c1 = ltl.castp %s : !ltl.sequence
+%c2 = ltl.castp %p : !ltl.property
+unrealized_conversion_cast %c0 : !ltl.property to index
+unrealized_conversion_cast %c1 : !ltl.property to index
+unrealized_conversion_cast %c2 : !ltl.property to index
+
+//===----------------------------------------------------------------------===//
+// Sequences
+//===----------------------------------------------------------------------===//
 
 // CHECK: ltl.concat {{%.+}} : !ltl.sequence
 // CHECK: ltl.concat {{%.+}}, {{%.+}} : !ltl.sequence, !ltl.sequence
@@ -61,6 +84,13 @@ ltl.delay %s, 42, 1337 : !ltl.sequence
 ltl.concat %s : !ltl.sequence
 ltl.concat %s, %s : !ltl.sequence, !ltl.sequence
 ltl.concat %s, %s, %s : !ltl.sequence, !ltl.sequence, !ltl.sequence
+
+// CHECK: ltl.repeat {{%.+}}, 0 : !ltl.sequence
+// CHECK: ltl.repeat {{%.+}}, 42 : !ltl.sequence
+// CHECK: ltl.repeat {{%.+}}, 42, 1337 : !ltl.sequence
+ltl.repeat %s, 0 : !ltl.sequence
+ltl.repeat %s, 42 : !ltl.sequence
+ltl.repeat %s, 42, 1337 : !ltl.sequence
 
 //===----------------------------------------------------------------------===//
 // Properties
@@ -82,6 +112,9 @@ ltl.implication %s, %p : !ltl.sequence, !ltl.property
 ltl.eventually %true : i1
 ltl.eventually %s : !ltl.sequence
 ltl.eventually %p : !ltl.property
+
+// CHECK: ltl.until {{%.+}}, {{%.+}} : !ltl.property, !ltl.property
+ltl.until %p, %p : !ltl.property, !ltl.property
 
 //===----------------------------------------------------------------------===//
 // Clocking

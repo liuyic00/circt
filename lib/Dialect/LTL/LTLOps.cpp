@@ -57,6 +57,23 @@ OrOp::inferReturnTypes(MLIRContext *context, std::optional<Location> loc,
 }
 
 //===----------------------------------------------------------------------===//
+// DelayOp
+//===----------------------------------------------------------------------===//
+
+LogicalResult
+DelayOp::inferReturnTypes(MLIRContext *context, std::optional<Location> loc,
+                          ValueRange operands, DictionaryAttr attributes,
+                          OpaqueProperties properties, RegionRange regions,
+                          SmallVectorImpl<Type> &inferredReturnTypes) {
+  if (isa<PropertyType>(operands[0].getType())) {
+    inferredReturnTypes.push_back(PropertyType::get(context));
+  } else {
+    inferredReturnTypes.push_back(SequenceType::get(context));
+  }
+  return success();
+}
+
+//===----------------------------------------------------------------------===//
 // ClockOp
 //===----------------------------------------------------------------------===//
 
