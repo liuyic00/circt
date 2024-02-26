@@ -96,24 +96,6 @@ def DelayOp : LTLOp<"delay", [
   }];
 }
 
-def CastToPropOp : LTLOp<"castp", [Pure]> {
-  let arguments = (ins LTLAnyPropertyType:$input);
-  let results = (outs LTLPropertyType:$result);
-  let assemblyFormat = [{
-    $input attr-dict `:` type($input)
-  }];
-  let hasFolder = 1;
-  let hasCanonicalizer = 1;
-
-  let summary = "Cast to a property.";
-  let description = [{
-    Cast the `$input` to `!ltl.property`. This operater is recommended to be
-    used only inside generic operations, such as `ltl.and`, `ltl.or` and
-    `ltl.delay`, to explicitly specify that the operation is applied to
-    `!ltl.property`.
-  }];
-}
-
 //===----------------------------------------------------------------------===//
 // Sequences
 //===----------------------------------------------------------------------===//

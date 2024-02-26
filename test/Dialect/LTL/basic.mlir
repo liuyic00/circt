@@ -64,16 +64,6 @@ unrealized_conversion_cast %d0 : !ltl.sequence to index
 unrealized_conversion_cast %d1 : !ltl.sequence to index
 unrealized_conversion_cast %d2 : !ltl.property to index
 
-// CHECK: ltl.castp {{%.+}} : i1
-// CHECK: ltl.castp {{%.+}} : !ltl.sequence
-// CHECK: ltl.castp {{%.+}} : !ltl.property
-%c0 = ltl.castp %true : i1
-%c1 = ltl.castp %s : !ltl.sequence
-%c2 = ltl.castp %p : !ltl.property
-unrealized_conversion_cast %c0 : !ltl.property to index
-unrealized_conversion_cast %c1 : !ltl.property to index
-unrealized_conversion_cast %c2 : !ltl.property to index
-
 //===----------------------------------------------------------------------===//
 // Sequences
 //===----------------------------------------------------------------------===//

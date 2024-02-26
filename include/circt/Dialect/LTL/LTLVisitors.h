@@ -53,7 +53,6 @@ public:
   HANDLE(DelayOp, Unhandled);
   HANDLE(ConcatOp, Unhandled);
   HANDLE(RepeatOp, Unhandled);
-  HANDLE(CastToPropOp, Unhandled);
   HANDLE(NotOp, Unhandled);
   HANDLE(ImplicationOp, Unhandled);
   HANDLE(EventuallyOp, Unhandled);

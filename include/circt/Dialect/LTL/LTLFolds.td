@@ -46,33 +46,6 @@ def MoveDelayIntoConcat : Pat<
   (ConcatOp (concatValues (DelayOp (valueHead $inputs), $delay, $length),
                           (valueTail $inputs)))>;
 
-
-//===----------------------------------------------------------------------===//
-// CastToPropOp
-//===----------------------------------------------------------------------===//
-
-// not(castp(s)) -> not(s)
-def CastpInNot : Pat<(NotOp (CastToPropOp $input)), (NotOp $input)>;
-// implication(s, castp(s)) -> implication(s, s)
-def CastpInImplication : Pat<
-  (ImplicationOp $antecedent, (CastToPropOp $consequent)),
-  (ImplicationOp $antecedent, $consequent)>;
-// eventually(castp(s)) -> eventually(s)
-def CastpInEventually : Pat<
-  (EventuallyOp (CastToPropOp $input)), (EventuallyOp $input)>;
-// until(castp(s), a) -> until(s, a)
-def CastpInUntilInput : Pat<
-  (UntilOp (CastToPropOp $input), $condition),
-  (UntilOp $input, $condition)>;
-// until(a, castp(s)) -> until(a, s)
-def CastpInUntilCondition : Pat<
-  (UntilOp $input, (CastToPropOp $condition)),
-  (UntilOp $input, $condition)>;
-// disable(castp(s), i) -> disable(s, i)
-def CastpInDisable : Pat<
-  (DisableOp (CastToPropOp $input), $condition),
-  (DisableOp $input, $condition)>;
-
 //===----------------------------------------------------------------------===//
 // ConcatOp
 //===----------------------------------------------------------------------===//

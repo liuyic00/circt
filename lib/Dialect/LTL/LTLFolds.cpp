@@ -75,27 +75,6 @@ void DelayOp::getCanonicalizationPatterns(RewritePatternSet &results,
 }
 
 //===----------------------------------------------------------------------===//
-// CastToPropOp
-//===----------------------------------------------------------------------===//
-
-OpFoldResult CastToPropOp::fold(FoldAdaptor adaptor) {
-  // castp(p) -> p
-  if (isa<PropertyType>(getInput().getType()))
-    return getInput();
-
-  return {};
-}
-void CastToPropOp::getCanonicalizationPatterns(RewritePatternSet &results,
-                                               MLIRContext *context) {
-  results.add<patterns::CastpInNot>(results.getContext());
-  results.add<patterns::CastpInImplication>(results.getContext());
-  results.add<patterns::CastpInEventually>(results.getContext());
-  results.add<patterns::CastpInUntilInput>(results.getContext());
-  results.add<patterns::CastpInUntilCondition>(results.getContext());
-  results.add<patterns::CastpInDisable>(results.getContext());
-}
-
-//===----------------------------------------------------------------------===//
 // ConcatOp
 //===----------------------------------------------------------------------===//
 
