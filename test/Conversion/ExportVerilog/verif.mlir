@@ -107,6 +107,25 @@ hw.module @Sequences(in %clk: i1, in %a: i1, in %b: i1) {
   verif.assert %g2 : !ltl.sequence
   verif.assert %g3 : !ltl.sequence
 
+  // CHECK: assert property (a[*0]);
+  // CHECK: assert property (a[*4]);
+  // CHECK: assert property (a[*5:6]);
+  // CHECK: assert property (a[*7:$]);
+  // CHECK: assert property (a[*]);
+  // CHECK: assert property (a[+]);
+  %r0 = ltl.repeat %a, 0, 0 : i1
+  %r1 = ltl.repeat %a, 4, 0 : i1
+  %r2 = ltl.repeat %a, 5, 1 : i1
+  %r3 = ltl.repeat %a, 7 : i1
+  %r4 = ltl.repeat %a, 0 : i1
+  %r5 = ltl.repeat %a, 1 : i1
+  verif.assert %r0 : !ltl.sequence
+  verif.assert %r1 : !ltl.sequence
+  verif.assert %r2 : !ltl.sequence
+  verif.assert %r3 : !ltl.sequence
+  verif.assert %r4 : !ltl.sequence
+  verif.assert %r5 : !ltl.sequence
+
   // CHECK: assert property (@(posedge clk) a);
   // CHECK: assert property (@(negedge clk) a);
   // CHECK: assert property (@(edge clk) a);
@@ -131,6 +150,24 @@ hw.module @Properties(in %clk: i1, in %a: i1, in %b: i1) {
   // CHECK: assert property (not a);
   %n0 = ltl.not %a : i1
   verif.assert %n0 : !ltl.property
+  // CHECK: assert property (not a);
+  // CHECK: assert property (nexttime[4] not a);
+  // CHECK: assert property (eventually[5:6] not a);
+  // CHECK: assert property (nexttime[7] eventually not a);
+  // CHECK: assert property (eventually not a);
+  // CHECK: assert property (nexttime eventually not a);
+  %n1 = ltl.delay %n0, 0, 0 : !ltl.property
+  %n2 = ltl.delay %n0, 4, 0 : !ltl.property
+  %n3 = ltl.delay %n0, 5, 1 : !ltl.property
+  %n4 = ltl.delay %n0, 7 : !ltl.property
+  %n5 = ltl.delay %n0, 0 : !ltl.property
+  %n6 = ltl.delay %n0, 1 : !ltl.property
+  verif.assert %n1 : !ltl.property
+  verif.assert %n2 : !ltl.property
+  verif.assert %n3 : !ltl.property
+  verif.assert %n4 : !ltl.property
+  verif.assert %n5 : !ltl.property
+  verif.assert %n6 : !ltl.property
 
   // CHECK: assert property (a |-> b);
   // CHECK: assert property (a ##1 b |-> not a);
@@ -149,6 +186,10 @@ hw.module @Properties(in %clk: i1, in %a: i1, in %b: i1) {
   // CHECK: assert property (s_eventually a);
   %e0 = ltl.eventually %a : i1
   verif.assert %e0 : !ltl.property
+
+  // CHECK: assert property (a until b);
+  %u0 = ltl.until %a, %b : i1, i1
+  verif.assert %u0 : !ltl.property
 
   // CHECK: assert property (@(posedge clk) a |-> b);
   // CHECK: assert property (@(posedge clk) a ##1 b |-> (@(negedge b) not a));
@@ -196,6 +237,14 @@ hw.module @Precedence(in %a: i1, in %b: i1) {
   %e2 = ltl.and %b, %e0 : i1, !ltl.property
   verif.assert %e1 : !ltl.property
   verif.assert %e2 : !ltl.property
+
+  // CHECK: assert property ((a until b) and a);
+  // CHECK: assert property (nexttime[2] eventually a until b);
+  %u0 = ltl.until %a, %b : i1, i1
+  %u1 = ltl.and %u0, %a : !ltl.property, i1
+  %u2 = ltl.delay %u0, 2 : !ltl.property
+  verif.assert %u1 : !ltl.property
+  verif.assert %u2 : !ltl.property
 }
 
 // CHECK-LABEL: module SystemVerilogSpecExamples
