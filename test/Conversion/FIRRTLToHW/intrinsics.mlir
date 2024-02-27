@@ -59,6 +59,11 @@ firrtl.circuit "Intrinsics" {
     // CHECK-NEXT: [[C0:%.+]] = ltl.concat [[D0]], [[L1]] : !ltl.sequence, !ltl.sequence
     %c0 = firrtl.int.ltl.concat %d0, %l1 : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<1>
 
+    // CHECK-NEXT: [[R0:%.+]] = ltl.repeat %a, 42 : i1
+    // CHECK-NEXT: [[R1:%.+]] = ltl.repeat %b, 42, 1337 : i1
+    %r0 = firrtl.int.ltl.repeat %a, 42 : (!firrtl.uint<1>) -> !firrtl.uint<1>
+    %r1 = firrtl.int.ltl.repeat %b, 42, 1337 : (!firrtl.uint<1>) -> !firrtl.uint<1>
+
     // CHECK-NEXT: [[N0:%.+]] = ltl.not [[C0]] : !ltl.sequence
     %n0 = firrtl.int.ltl.not %c0 : (!firrtl.uint<1>) -> !firrtl.uint<1>
 
@@ -67,6 +72,9 @@ firrtl.circuit "Intrinsics" {
 
     // CHECK-NEXT: [[E0:%.+]] = ltl.eventually [[I0]] : !ltl.property
     %e0 = firrtl.int.ltl.eventually %i0 : (!firrtl.uint<1>) -> !firrtl.uint<1>
+
+    // CHECK-NEXT: [[U0:%.+]] = ltl.until [[N0]], [[N0]] : !ltl.property, !ltl.property
+    %u0 = firrtl.int.ltl.until %n0, %n0 : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<1>
 
     // CHECK-NEXT: [[K0:%.+]] = ltl.clock [[I0]], posedge [[CLK]] : !ltl.property
     %k0 = firrtl.int.ltl.clock %i0, %clk : (!firrtl.uint<1>, !firrtl.clock) -> !firrtl.uint<1>
@@ -100,13 +108,16 @@ firrtl.circuit "Intrinsics" {
     %e = firrtl.wire : !firrtl.uint<1>
     %f = firrtl.wire : !firrtl.uint<1>
     %g = firrtl.wire : !firrtl.uint<1>
+    %h = firrtl.wire : !firrtl.uint<1>
 
     // CHECK-NEXT: verif.assert [[E:%.+]] : !ltl.sequence
     // CHECK-NEXT: verif.assert [[F:%.+]] : !ltl.property
     // CHECK-NEXT: verif.assert [[G:%.+]] : !ltl.property
+    // CHECK-NEXT: verif.assert [[H:%.+]] : !ltl.property
     firrtl.int.verif.assert %e : !firrtl.uint<1>
     firrtl.int.verif.assert %f : !firrtl.uint<1>
     firrtl.int.verif.assert %g : !firrtl.uint<1>
+    firrtl.int.verif.assert %h : !firrtl.uint<1>
 
     // !ltl.property
     // CHECK-NEXT: [[G]] = ltl.implication [[E]], [[F]] : !ltl.sequence, !ltl.property
@@ -128,10 +139,15 @@ firrtl.circuit "Intrinsics" {
     %1 = firrtl.int.ltl.not %b : (!firrtl.uint<1>) -> !firrtl.uint<1>
     firrtl.strictconnect %d, %1 : !firrtl.uint<1>
 
-    // !ltl.sequence
+    // inferred as !ltl.sequence
     // CHECK-NEXT: [[C]] = ltl.delay %a, 42 : i1
     %0 = firrtl.int.ltl.delay %a, 42 : (!firrtl.uint<1>) -> !firrtl.uint<1>
     firrtl.strictconnect %c, %0 : !firrtl.uint<1>
+
+    // inferred as !ltl.property
+    // CHECK-NEXT: [[H]] = ltl.delay [[D:%.+]], 42 : !ltl.property
+    %5 = firrtl.int.ltl.delay %d, 42 : (!firrtl.uint<1>) -> !firrtl.uint<1>
+    firrtl.strictconnect %h, %5 : !firrtl.uint<1>
   }
 
   // CHECK-LABEL: hw.module @HasBeenReset

@@ -1358,8 +1358,6 @@ class BinaryLTLIntrinsicOp<string mnemonic, list<Trait> traits = []> :
 // Generic
 def LTLAndIntrinsicOp : BinaryLTLIntrinsicOp<"and", [Commutative]>;
 def LTLOrIntrinsicOp : BinaryLTLIntrinsicOp<"or", [Commutative]>;
-
-// Sequences
 def LTLDelayIntrinsicOp : LTLIntrinsicOp<"delay"> {
   let arguments = (ins UInt1Type:$input,
                        I64Attr:$delay,
@@ -1369,12 +1367,24 @@ def LTLDelayIntrinsicOp : LTLIntrinsicOp<"delay"> {
     functional-type(operands, results)
   }];
 }
+
+// Sequences
 def LTLConcatIntrinsicOp : BinaryLTLIntrinsicOp<"concat">;
+def LTLRepeatIntrinsicOp : LTLIntrinsicOp<"repeat"> {
+  let arguments = (ins UInt1Type:$input,
+                       I64Attr:$base,
+                       OptionalAttr<I64Attr>:$more);
+  let assemblyFormat = [{
+    $input `,` $base (`,` $more^)? attr-dict `:`
+    functional-type(operands, results)
+  }];
+}
 
 // Properties
 def LTLNotIntrinsicOp : UnaryLTLIntrinsicOp<"not">;
 def LTLImplicationIntrinsicOp : BinaryLTLIntrinsicOp<"implication">;
 def LTLEventuallyIntrinsicOp : UnaryLTLIntrinsicOp<"eventually">;
+def LTLUntilIntrinsicOp : BinaryLTLIntrinsicOp<"until">;
 
 // Clocking
 def LTLClockIntrinsicOp : LTLIntrinsicOp<"clock"> {

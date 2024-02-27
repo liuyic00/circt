@@ -21,11 +21,11 @@ public:
   ResultType dispatchLTLVisitor(Operation *op, ExtraArgs... args) {
     auto *thisCast = static_cast<ConcreteType *>(this);
     return TypeSwitch<Operation *, ResultType>(op)
-        .template Case<AndOp, OrOp, DelayOp, ConcatOp, NotOp, ImplicationOp,
-                       EventuallyOp, ClockOp, DisableOp>(
-            [&](auto op) -> ResultType {
-              return thisCast->visitLTL(op, args...);
-            })
+        .template Case<AndOp, OrOp, DelayOp, ConcatOp, RepeatOp, NotOp,
+                       ImplicationOp, EventuallyOp, UntilOp, ClockOp,
+                       DisableOp>([&](auto op) -> ResultType {
+          return thisCast->visitLTL(op, args...);
+        })
         .Default([&](auto) -> ResultType {
           return thisCast->visitInvalidLTL(op, args...);
         });
