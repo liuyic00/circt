@@ -205,8 +205,9 @@ The `ltl.delay` operation can be applied to both sequences and properties, repre
 
 ### Until, Always and Eventually
 
-`ltl.until` and `ltl.always` are *weak*, meaning the property will hold even if the trace does not contain enough clock cycles to evaluate the property. `ltl.eventually` is *strong*, where `ltl.eventually %p` means `p` must hold at some point in the trace.
+`ltl.until` is *weak*, meaning the property will hold even if the trace does not contain enough clock cycles to evaluate the property. `ltl.eventually` is *strong*, where `ltl.eventually %p` means `p` must hold at some point in the trace.
 
+`always` is not implemented for now, but `always p` could be expressed by `not s_eventually not p`. Notice that assertions work globally. Properties will be checked from every cycle.
 
 ### Concatenation and Repetition
 
