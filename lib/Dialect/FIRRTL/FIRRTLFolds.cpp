@@ -941,6 +941,18 @@ OpFoldResult IntegerAddOp::fold(FoldAdaptor adaptor) {
   return {};
 }
 
+OpFoldResult IntegerMulOp::fold(FoldAdaptor adaptor) {
+  // TODO: implement constant folding, etc.
+  // Tracked in https://github.com/llvm/circt/issues/6724.
+  return {};
+}
+
+OpFoldResult IntegerShrOp::fold(FoldAdaptor adaptor) {
+  // TODO: implement constant folding, etc.
+  // Tracked in https://github.com/llvm/circt/issues/6725.
+  return {};
+}
+
 //===----------------------------------------------------------------------===//
 // Unary Operators
 //===----------------------------------------------------------------------===//
@@ -1538,7 +1550,7 @@ OpFoldResult ShrPrimOp::fold(FoldAdaptor adaptor) {
   // shr(x, cst) where cst is all of x's bits and x is unsigned is 0.
   // If x is signed, it is the sign bit.
   if (shiftAmount >= inputWidth && inputType.isUnsigned())
-    return getIntAttr(getType(), APInt(1, 0));
+    return getIntAttr(getType(), APInt(0, 0, false));
 
   // Constant fold.
   if (auto cst = getConstant(adaptor.getInput())) {

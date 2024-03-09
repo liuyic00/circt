@@ -760,7 +760,7 @@ updateInstanceInClass(InstanceOp firrtlInstance, hw::HierPathOp hierPath,
     // Value as an actual parameter to the Object instance.
     auto propertyAssignment = getPropertyAssignment(propertyResult);
     assert(propertyAssignment && "properties require single assignment");
-    actualParameters.push_back(propertyAssignment.getSrc());
+    actualParameters.push_back(propertyAssignment.getSrcMutable().get());
 
     // Erase the property assignment.
     opsToErase.push_back(propertyAssignment);
@@ -980,6 +980,45 @@ struct ListCreateOpConversion
       return failure();
     rewriter.replaceOpWithNewOp<om::ListCreateOp>(op, listType,
                                                   adaptor.getElements());
+    return success();
+  }
+};
+
+struct IntegerAddOpConversion
+    : public OpConversionPattern<firrtl::IntegerAddOp> {
+  using OpConversionPattern::OpConversionPattern;
+
+  LogicalResult
+  matchAndRewrite(firrtl::IntegerAddOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    rewriter.replaceOpWithNewOp<om::IntegerAddOp>(op, adaptor.getLhs(),
+                                                  adaptor.getRhs());
+    return success();
+  }
+};
+
+struct IntegerMulOpConversion
+    : public OpConversionPattern<firrtl::IntegerMulOp> {
+  using OpConversionPattern::OpConversionPattern;
+
+  LogicalResult
+  matchAndRewrite(firrtl::IntegerMulOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    rewriter.replaceOpWithNewOp<om::IntegerMulOp>(op, adaptor.getLhs(),
+                                                  adaptor.getRhs());
+    return success();
+  }
+};
+
+struct IntegerShrOpConversion
+    : public OpConversionPattern<firrtl::IntegerShrOp> {
+  using OpConversionPattern::OpConversionPattern;
+
+  LogicalResult
+  matchAndRewrite(firrtl::IntegerShrOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    rewriter.replaceOpWithNewOp<om::IntegerShrOp>(op, adaptor.getLhs(),
+                                                  adaptor.getRhs());
     return success();
   }
 };
@@ -1397,6 +1436,9 @@ static void populateRewritePatterns(
   patterns.add<ListCreateOpConversion>(converter, patterns.getContext());
   patterns.add<BoolConstantOpConversion>(converter, patterns.getContext());
   patterns.add<DoubleConstantOpConversion>(converter, patterns.getContext());
+  patterns.add<IntegerAddOpConversion>(converter, patterns.getContext());
+  patterns.add<IntegerMulOpConversion>(converter, patterns.getContext());
+  patterns.add<IntegerShrOpConversion>(converter, patterns.getContext());
 }
 
 // Convert to OM ops and types in Classes or Modules.

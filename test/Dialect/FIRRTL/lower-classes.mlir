@@ -341,3 +341,36 @@ firrtl.circuit "ModuleWithPropertySubmodule" {
   firrtl.module private @SubmoduleWithProperty(in %prop: !firrtl.integer) {
   }
 }
+
+// CHECK-LABEL: firrtl.circuit "DownwardReferences"
+firrtl.circuit "DownwardReferences" {
+  firrtl.class @MyClass() {
+  }
+  firrtl.module @MyClassUser(in %myClassIn: !firrtl.class<@MyClass()>) {
+  }
+  firrtl.module @DownwardReferences() {
+    // CHECK: [[OBJ:%.+]] = om.object @MyClass
+    %myClass = firrtl.object @MyClass()
+    // CHECK: [[BP:%.+]] = om.basepath_create
+    // CHECK: om.object @MyClassUser_Class([[BP]], [[OBJ]])
+    %myClassUser.myClassIn = firrtl.instance myClassUser @MyClassUser(in myClassIn: !firrtl.class<@MyClass()>)
+    firrtl.propassign %myClassUser.myClassIn, %myClass : !firrtl.class<@MyClass()>
+  }
+}
+
+// CHECK-LABEL: firrtl.circuit "IntegerArithmetic"
+firrtl.circuit "IntegerArithmetic" {
+  firrtl.module @IntegerArithmetic() {
+    %0 = firrtl.integer 1
+    %1 = firrtl.integer 2
+
+    // CHECK: om.integer.add %0, %1 : !om.integer
+    %2 = firrtl.integer.add %0, %1 : (!firrtl.integer, !firrtl.integer) -> !firrtl.integer
+
+    // CHECK: om.integer.mul %0, %1 : !om.integer
+    %3 = firrtl.integer.mul %0, %1 : (!firrtl.integer, !firrtl.integer) -> !firrtl.integer
+
+    // CHECK: om.integer.shr %0, %1 : !om.integer
+    %4 = firrtl.integer.shr %0, %1 : (!firrtl.integer, !firrtl.integer) -> !firrtl.integer
+  }
+}
