@@ -848,6 +848,8 @@ void HWModuleExternOp::build(OpBuilder &builder, OperationState &result,
         attributes);
 }
 
+// commnet to test ci
+
 void HWModuleExternOp::modifyPorts(
     ArrayRef<std::pair<unsigned, PortInfo>> insertInputs,
     ArrayRef<std::pair<unsigned, PortInfo>> insertOutputs,
